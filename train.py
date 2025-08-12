@@ -61,6 +61,9 @@ def main():
     model = build_model(args=args)
     model = model.cuda()
 
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"trainable params: {trainable_params:,} ≈ {trainable_params / 1e6:.4f} M")
+
     params = model.parameters()
 
     cudnn.benchmark = True

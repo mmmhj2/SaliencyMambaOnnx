@@ -34,8 +34,8 @@ class CrossModelAtt(nn.Module):
         self.model, _ = clip.load(backbone)
         self.model = self.model.eval()
 
-        for param in self.model.parameters():
-            param.requires_grad = False
+        for p in self.model.parameters():
+            p.requires_grad = False
 
         self.gamma = nn.Parameter(torch.zeros(1))
         self.softmax = nn.Softmax(dim=-1)
@@ -369,24 +369,28 @@ class SalMM(nn.Module):
             if m.bias is not None:
                 m.bias.data.zero_()
 
+    def train(self, mode: bool = True):
+        super().train(mode)
+        self.CrossModelAtt.model.eval()
+        return self
+
     def forward(self, x):
-        
         out = F.gelu(F.max_pool2d(self.ebn1(self.encoder1(x)),2,2))
-        t1 = out # b, c0, H/2, W/2
+        t1 = out  # b, c0, H/2, W/2
 
         out = F.gelu(F.max_pool2d(self.ebn2(self.encoder2(out)),2,2))
-        t2 = out # b, c1, H/4, W/4 
+        t2 = out  # b, c1, H/4, W/4
 
         out = F.gelu(F.max_pool2d(self.ebn3(self.encoder3(out)),2,2))
-        t3 = out # b, c2, H/8, W/8
+        t3 = out  # b, c2, H/8, W/8
 
         out = F.gelu(F.max_pool2d(self.ebn4(self.encoder4(out)),2,2))
-        t4 = out # b, c3, H/16, W/16
+        t4 = out  # b, c3, H/16, W/16
         # print(t4.shape)
         # exit(0)
         # print('t4', t4.shape)
         out = F.gelu(F.max_pool2d(self.ebn5(self.encoder5(out)),2,2))
-        t5 = out # b, c4, H/32, W/32
+        t5 = out  # b, c4, H/32, W/32
         # print('t5', t5.shape)
         if self.bridge: t1, t2, t3, t4, t5 = self.scab(t1, t2, t3, t4, t5)
         
