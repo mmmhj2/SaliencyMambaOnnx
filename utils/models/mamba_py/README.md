@@ -1,0 +1,1 @@
+This folder contains a trimmed version of [mamba.py](git@github.com:alxndrTL/mamba.py.git) to replace the native `mamba_ssm` module.
