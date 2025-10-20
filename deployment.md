@@ -6,28 +6,21 @@ Due to the fact that the configuration of Mamba is not simple, our configuration
 
 * Git clone this repository
 
-```python
+```shell
 git clone https://github.com/zhao-chunyu/SaliencyMamba
 cd SaliencyMamba
 ```
 * Create conda environment
 
-```python
+```shell
 conda create -n salmamba python=3.10
 conda activate salmamba
 ```
 * Install PyTorch 2.2.0+cu121
 
-```python
+```shell
 pip install torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0 --index-url https://download.pytorch.org/whl/cu121
-```
-
-* Install `causal_conv1d` and `mamba`
-
-```python
 pip install -r requirements.txt
-pip install -e utils/models/causal-conv1d
-pip install -e utils/models/mamba
 ```
 
 > [note] For the configuration of the Mamba environment, we refer to the configuration process of [VideoMamba](https://github.com/OpenGVLab/VideoMamba/tree/main/videomamba). 
