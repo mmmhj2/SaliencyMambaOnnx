@@ -1,16 +1,9 @@
-import os
-import time
+import os, random, time, logging, gc
 import torch
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torch.optim
-
-import random
-import warnings
-import logging
 import numpy as np
-import json
-import gc
 from datetime import datetime
 
 from utils.mid_metrics import cc, sim, kldiv
@@ -18,40 +11,11 @@ from utils.options import parser
 from utils.bulid_models import build_model
 from utils.build_datasets import build_dataset
 
-warnings.simplefilter("ignore")
-os.environ['NUMEXPR_MAX_THREADS'] = '64'
-
-args = parser.parse_args()
-
-torch.cuda.set_device(int(args.gpu))
-
-
-date_time = datetime.now().strftime('%Y%m%d-%H:%M:%S')
-
-ckpts = f'ckpts/{args.category}/{args.network}_{date_time}/'
-if not os.path.exists(ckpts):
-    os.makedirs(ckpts)
-
-log_file = os.path.join(ckpts + "/train_log_%s.txt" % (args.network, ))
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', filename=log_file)
-
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-console.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
-logging.getLogger('').addHandler(console)
-
-# saving config list
-logging.info('*'*50)
-logging.info(f'[Train Model] ----> {ckpts[6:-1]}')
-for arg, value in vars(args).items():
-    logging.info(f'%-15s: %s', arg, value)
-logging.info('*'*50)
-
+# warnings.simplefilter("ignore")
+# os.environ['NUMEXPR_MAX_THREADS'] = '64'
 
 def main():
     # global args, best_score
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
-    os.environ["CUDA_LAUNCH_BLOCKING"] = args.gpu
 
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
@@ -84,13 +48,17 @@ def main():
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
 
+    logging.info("*** Building Dataset ***")
     train_loader, valid_loader, _ = build_dataset(args=args)
 
     criterion = nn.BCELoss().cuda()
 
     best_loss = float('inf')
     file_name = os.path.join(ckpts, 'model_best_%s.tar' % (args.network, ))
+
+    logging.info("*** Starting training ***")
     for epoch in range(args.start_epoch, args.epochs):
+        logging.debug(f"Epoch: {epoch}")
         torch.cuda.empty_cache()
         gc.collect()
 
@@ -132,8 +100,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
     model.train()
     start = time.time()
     for i, (input, target) in enumerate(train_loader):
-        input = input.cuda()
+        input : torch.Tensor = input.cuda()
         target = target.cuda()
+
+        print(input.shape)
 
         # compute output
         output, _ = model(input)
@@ -229,6 +199,33 @@ def adjust_learning_rate(optimizer, epoch):
 
 
 if __name__ == '__main__':
+    
+    args = parser.parse_args()
+
+    torch.cuda.set_device(int(args.gpu))
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+
+    date_time = datetime.now().strftime('%Y%m%d-%H_%M_%S')
+
+    ckpts = f'ckpts/{args.category}/{args.network}_{date_time}/'
+    if not os.path.exists(ckpts):
+        os.makedirs(ckpts)
+
+    log_file = os.path.join(ckpts + "/train_log_%s.txt" % (args.network, ))
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', filename=log_file)
+
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+    logging.getLogger('').addHandler(console)
+
+    # saving config list
+    logging.info('*'*50)
+    logging.info(f'[Train Model] ----> {ckpts[6:-1]}')
+    for arg, value in vars(args).items():
+        logging.info(f'%-15s: %s', arg, value)
+    logging.info('*'*50)
+
     # train
     main()
 
