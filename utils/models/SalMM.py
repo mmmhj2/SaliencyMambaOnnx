@@ -1,4 +1,4 @@
-import torch
+import torch, os
 from torch import nn
 import torch.nn.functional as F
 
@@ -12,7 +12,6 @@ from .clip import *
 
 
 clip_path = 'clip'
-device = torch.device('cuda:0')
 backbone = ['RN50', 'RN101', 'RN50x4', 'RN50x16', 'ViT-B/32', 'ViT-B/16']
 
 id = 4
@@ -28,10 +27,13 @@ id = 4
 CrossModelAtt: q-->clip  k-->clip  v-->feature
 '''
 class CrossModelAtt(nn.Module):
-    def __init__(self, backbone=backbone[id], device=device):
+    def __init__(self, backbone=backbone[id]):
         super().__init__()
-        self.device = device
-        self.model, _ = clip.load(backbone)
+        device = 'cpu'
+        if torch.cuda.is_available() and not 'EXPORTING_ONNX_MODEL' in os.environ:
+            device = 'cuda'
+        self.model, _ = clip.load(backbone, device)
+        self.torch_resize = Resize([224, 224], antialias=False)
         self.model = self.model.eval()
 
         for p in self.model.parameters():
@@ -44,8 +46,7 @@ class CrossModelAtt(nn.Module):
         # 1: get clip feature
         b, c, h, w = feature.shape
 
-        torch_resize = Resize([224, 224])
-        img = torch_resize(img)
+        img = self.torch_resize(img)
 
         with torch.no_grad():
             clip_feature = self.model.encode_image(img)
