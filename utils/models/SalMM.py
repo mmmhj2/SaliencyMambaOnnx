@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from timm.models.layers import trunc_normal_
 import math
-from .mamba_py.mamba_onnx import Mamba, MambaConfig
+from .mamba_py.vim import VMambaBlock, MambaConfig
 
 
 from torchvision.transforms import Resize
@@ -125,7 +125,7 @@ class SCPMambaLayer(nn.Module):
         self.norm3 = nn.LayerNorm(dim_[4])
         self.norm4 = nn.LayerNorm(dim_[5])
 
-        self.mamba1 = Mamba(
+        self.mamba1 = VMambaBlock(
             MambaConfig(
                 d_model=dim_[0],  # Model dimension d_model
                 n_layers=1,
@@ -134,7 +134,7 @@ class SCPMambaLayer(nn.Module):
                 expand_factor=expand,    # Block expansion factor
             )
         )
-        self.mamba2 = Mamba(
+        self.mamba2 = VMambaBlock(
             MambaConfig(
                 d_model=dim_[2],  # Model dimension d_model
                 n_layers=1,
@@ -143,7 +143,7 @@ class SCPMambaLayer(nn.Module):
                 expand_factor=expand,    # Block expansion factor
             )
         )
-        self.mamba3 = Mamba(
+        self.mamba3 = VMambaBlock(
             MambaConfig(
                 d_model=dim_[4],  # Model dimension d_model
                 n_layers=1,
@@ -152,7 +152,7 @@ class SCPMambaLayer(nn.Module):
                 expand_factor=expand,    # Block expansion factor
             )
         )
-        self.mamba4 = Mamba(
+        self.mamba4 = VMambaBlock(
             MambaConfig(
                 d_model=dim_[5],  # Model dimension d_model
                 n_layers=1,
