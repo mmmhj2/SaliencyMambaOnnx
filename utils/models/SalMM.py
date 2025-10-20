@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from timm.models.layers import trunc_normal_
 import math
-from mamba_ssm import Mamba
+from .mamba_py.mamba_onnx import Mamba, MambaConfig
 
 
 from torchvision.transforms import Resize
@@ -126,28 +126,40 @@ class SCPMambaLayer(nn.Module):
         self.norm4 = nn.LayerNorm(dim_[5])
 
         self.mamba1 = Mamba(
-            d_model=dim_[0],  # Model dimension d_model
-            d_state=d_state,  # SSM state expansion factor
-            d_conv=d_conv,    # Local convolution width
-            expand=expand,    # Block expansion factor
+            MambaConfig(
+                d_model=dim_[0],  # Model dimension d_model
+                n_layers=1,
+                d_state=d_state,  # SSM state expansion factor
+                d_conv=d_conv,    # Local convolution width
+                expand_factor=expand,    # Block expansion factor
+            )
         )
         self.mamba2 = Mamba(
-            d_model=dim_[2],  # Model dimension d_model
-            d_state=d_state,  # SSM state expansion factor
-            d_conv=d_conv,    # Local convolution width
-            expand=expand,    # Block expansion factor
+            MambaConfig(
+                d_model=dim_[2],  # Model dimension d_model
+                n_layers=1,
+                d_state=d_state,  # SSM state expansion factor
+                d_conv=d_conv,    # Local convolution width
+                expand_factor=expand,    # Block expansion factor
+            )
         )
         self.mamba3 = Mamba(
-            d_model=dim_[4],  # Model dimension d_model
-            d_state=d_state,  # SSM state expansion factor
-            d_conv=d_conv,    # Local convolution width
-            expand=expand,    # Block expansion factor
+            MambaConfig(
+                d_model=dim_[4],  # Model dimension d_model
+                n_layers=1,
+                d_state=d_state,  # SSM state expansion factor
+                d_conv=d_conv,    # Local convolution width
+                expand_factor=expand,    # Block expansion factor
+            )
         )
         self.mamba4 = Mamba(
-            d_model=dim_[5],  # Model dimension d_model
-            d_state=d_state,  # SSM state expansion factor
-            d_conv=d_conv,    # Local convolution width
-            expand=expand,    # Block expansion factor
+            MambaConfig(
+                d_model=dim_[5],  # Model dimension d_model
+                n_layers=1,
+                d_state=d_state,  # SSM state expansion factor
+                d_conv=d_conv,    # Local convolution width
+                expand_factor=expand,    # Block expansion factor
+            )
         )
         
         self.skip_scale = nn.Parameter(torch.ones(1))
